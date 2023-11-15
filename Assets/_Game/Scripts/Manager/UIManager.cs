@@ -18,13 +18,21 @@ public class UIManager : Singleton<UIManager>
 	[SerializeField] private GameObject mute;
 	[SerializeField] private Text levelTxt;
 	
-	
-
 	private Dictionary<IdUI, GameObject> UIActive = new Dictionary<IdUI, GameObject>();
 	private bool isBtnSettingToggle = false;
+	private bool isEnableReset = true;
 
 	private void Start() {
 		ChangeLevel();
+	}
+
+
+	private void OnEnable() {
+		EventManager.OnEventEmitted += OnEventEmitted;
+	}
+
+	private void OnDisable() {
+		EventManager.OnEventEmitted -= OnEventEmitted;
 	}
 
 	public bool IsLoaded(IdUI id)
@@ -74,7 +82,8 @@ public class UIManager : Singleton<UIManager>
 	}
 
 	public void BtnReplayClick() {
-		GameManager.Ins.OnReset();
+		if (!isEnableReset) return;
+		EventManager.EmitEvent(EventID.Replay);
 	}
 
 	public void BtnSettingClick() {
@@ -98,6 +107,12 @@ public class UIManager : Singleton<UIManager>
 
 	public void ChangeLevel() {
 		levelTxt.text = "Level: " + LevelManager.Ins.CurrentLevel;
+	}
+	private void OnEventEmitted(EventID eventID) {
+		// switch (eventID) {
+		// 	case EventID.NextLevel:
+		// 		
+		// }
 	}
 
 }

@@ -43,5 +43,14 @@ public enum IdUI {
 }
 
 public enum PrefKey {
-	Coin
+	Coin,
+	Level
+}
+
+public enum EventID {
+	NextLevel,
+	Replay,
+	WinningLevel,
+	WinLevel,
+	CompleteLevel
 }

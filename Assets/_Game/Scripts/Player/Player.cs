@@ -10,11 +10,9 @@ public class Player : MonoBehaviour {
 	[SerializeField] private float moveSpeed;
 	[SerializeField] private Transform playerModel;
 
-	private const float ERROR_VALUE = 0.001f;
-
 	private Stack<PlayerBrick> bricks = new Stack<PlayerBrick>();
 
-	private Vector3 directionCast;
+	private Vector3 directionMove;
 	private Vector2 startTouchPos, endTouchPos;
 	private float maxDistance = Mathf.Infinity;
 	private Vector3 targetPos;
@@ -25,16 +23,43 @@ public class Player : MonoBehaviour {
 	private bool isMoving = false;
 	
 	private string currentAnim;
-	private void Awake() {
-		directionCast = transform.right;
+	
+	private void Start() {
+		transform.position = LevelManager.Ins.StartPoint.position;
+	}
+
+	private void OnEnable() {
+		EventManager.OnEventEmitted += OnEventEmitted;
+	}
+
+	private void OnDisable() {
+		EventManager.OnEventEmitted -= OnEventEmitted;
+	}
+
+	private void OnEventEmitted(EventID eventID) {
+		switch (eventID) {
+			case EventID.Replay:
+			case EventID.NextLevel:
+				OnReset();
+				break;
+			case EventID.WinningLevel:
+				RaceToWin();
+				break;
+			case EventID.WinLevel:
+				SoundManager.Ins.Play(SoundType.Finish);
+				ClearBrick();
+				Win();
+				break;
+		}
 	}
 
 	public void OnReset() {
+		isMoving = false;
 		ClearBrick();
 		sprite.rotation = Quaternion.Euler(180, -30, -180);
 		ResetAnim();
-		isMoving = false;
-		
+		transform.position = LevelManager.Ins.StartPoint.position;
+
 	}
 
 	public bool IsEmpty() {
@@ -42,7 +67,8 @@ public class Player : MonoBehaviour {
 	}
 
 	public void StopMoving() {
-		isMoving = false;
+		InputManager.Ins.CanMove = false;
+		GameManager.Ins.IsEndLevel = true;
 		StartCoroutine(ReplayGame());
 	}
 
@@ -96,43 +122,43 @@ public class Player : MonoBehaviour {
 
 	private IEnumerator ReplayGame() {
 		yield return new WaitForSecondsRealtime(1f);
-		GameManager.Ins.OnReset();
+		EventManager.EmitEvent(EventID.Replay);
 	}
 
 	private void OnDrawGizmos()
 	{
 		RaycastHit hit;
 
-		bool isHit = Physics.Raycast(transform.position, directionCast, out hit, maxDistance, wallLayer);
+		bool isHit = Physics.Raycast(transform.position, directionMove, out hit, maxDistance, wallLayer);
 
 		if (isHit)
 		{
 			Gizmos.color = Color.red;
-			Gizmos.DrawRay(transform.position, directionCast * hit.distance);
+			Gizmos.DrawRay(transform.position, directionMove * hit.distance);
 		}
 		else
 		{
 			Gizmos.color = Color.green;
-			Gizmos.DrawRay(transform.position, directionCast * maxDistance);
+			Gizmos.DrawRay(transform.position, directionMove * maxDistance);
 		}
 	}
 
 	private void CheckMove() {
 		RaycastHit hit;
 
-		bool isHit = Physics.Raycast(transform.position, directionCast, out hit, maxDistance, wallLayer);
+		bool isHit = Physics.Raycast(transform.position, InputManager.Ins.DirectionMove, out hit, maxDistance, wallLayer);
 		
 		if (isHit)
 		{
-			targetPos =(transform.position + directionCast * (hit.distance) - directionCast * 0.5f);
-			if (isMoving) {
+			targetPos =(transform.position + InputManager.Ins.DirectionMove * (hit.distance) - directionMove * 0.5f);
+			if (InputManager.Ins.CanMove) {
 				Move();
 			}
 		}
 	}
 
 	private PlayerDir MoveDirection() {
-		if (Vector3.Distance(startTouchPos, endTouchPos) < ERROR_VALUE) {
+		if (Vector3.Distance(startTouchPos, endTouchPos) < Constant.ERROR_VALUE) {
 			return PlayerDir.None;
 		}
 		if (Mathf.Abs(endTouchPos.y - startTouchPos.y) > Mathf.Abs(endTouchPos.x - startTouchPos.x)) {
@@ -162,43 +188,18 @@ public class Player : MonoBehaviour {
 
 	private void Move() {
 		transform.position = Vector3.MoveTowards(transform.position, targetPos, moveSpeed * Time.deltaTime);
-		if (Vector3.Distance(transform.position, targetPos) < ERROR_VALUE) {
-			isMoving = false;
+		if (Vector3.Distance(transform.position, targetPos) < Constant.ERROR_VALUE) {
+			InputManager.Ins.CanMove = false;
 		}
 	}
 	
 	private void Update() {
 		CheckMove();
-		if (GameManager.Ins.IsEndLevel) {
-			return;
-		}
+		// if (InputManager.Ins.CanMove || GameManager.Ins.IsEndLevel) return;
+		if (!InputManager.Ins.CanMove) return;
+		directionMove = InputManager.Ins.DirectionMove;
+		Debug.Log(directionMove);
+
 		
-		if (isMoving) return;
-		if (Input.GetMouseButtonDown(0)) {
-			startTouchPos = Input.mousePosition;
-		}
-
-		if (Input.GetMouseButtonUp(0)) {
-			endTouchPos = Input.mousePosition;
-			switch (MoveDirection()) {
-				case PlayerDir.Up:
-					directionCast = transform.forward;
-					break;
-				case PlayerDir.Down:
-					directionCast = transform.forward * -1;
-					break;
-				case PlayerDir.Right:
-					directionCast = transform.right;
-					break;
-				case PlayerDir.Left:
-					directionCast = transform.right * -1;
-					break;
-			}
-
-			if (MoveDirection() != PlayerDir.None) {
-				SoundManager.Ins.Play(SoundType.Move);
-				isMoving = true;
-			}
-		}
 	}
 }

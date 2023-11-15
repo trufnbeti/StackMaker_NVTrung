@@ -6,17 +6,12 @@ using UnityEngine;
 public class GameManager : Singleton<GameManager> {
 	public Player player;
 	public CameraFollow m_camera;
-	private bool isEndLevel = false;
 	private int coin;
+	private bool _isEndLevel = false;
 
 	private Stack<GameObject> objResets = new Stack<GameObject>();
 
-	public override void Awake() {
-		base.Awake();
-	}
-
 	private void Start() {
-		player.transform.position = LevelManager.Ins.StartPoint.position;
 		Pref.Coin = 0;
 		coin = Pref.Coin;
 		if (UIManager.Ins) {
@@ -24,14 +19,31 @@ public class GameManager : Singleton<GameManager> {
 		}
 	}
 
-	public int Coin {
-		get => coin;
-		set => coin = value;
+	private void OnEnable() {
+		EventManager.OnEventEmitted += OnEventEmitted;
+	}
+
+	private void OnDisable() {
+		EventManager.OnEventEmitted -= OnEventEmitted;
+	}
+
+	private void OnEventEmitted(EventID eventID) {
+		switch (eventID) {
+			case EventID.Replay:
+			case EventID.NextLevel:
+				OnReset();
+				break;
+		}
 	}
 	
 	public bool IsEndLevel {
-		get => isEndLevel;
-		set => isEndLevel = value;
+		get => _isEndLevel;
+		set => _isEndLevel = value;
+	}
+
+	public int Coin {
+		get => coin;
+		set => coin = value;
 	}
 
 	public void AddCoin(int value) {
@@ -47,14 +59,10 @@ public class GameManager : Singleton<GameManager> {
 	}
 
 	public void OnReset() {
-		isEndLevel = false;
-		m_camera.OnReset();
-		player.OnReset();
+		_isEndLevel = false;
 		while (objResets.Count > 0) {
 			var obj = objResets.Pop();
 			obj.SetActive(!obj.activeInHierarchy);
 		}
-
-		player.transform.position = LevelManager.Ins.StartPoint.position;
 	}
 }

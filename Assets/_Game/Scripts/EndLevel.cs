@@ -11,14 +11,15 @@ public class EndLevel : MonoBehaviour {
     
     private int valueToAdd = 0;
     private int speed;
+
     public void BtnAdsClick() {
-        valueToAdd = 250;
+        valueToAdd = Constant.COINS_PER_ADS;
         speed = 5;
         ClickDone();
     }
 
     public void BtnNextLevel() {
-        valueToAdd = 50;
+        valueToAdd = Constant.COINS_PER_LEVEL;
         speed = 1;
         ClickDone();
     }

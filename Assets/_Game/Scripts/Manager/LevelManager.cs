@@ -18,7 +18,7 @@ public class LevelManager : Singleton<LevelManager> {
 
 	public override void Awake() {
 		base.Awake();
-		_currentLevel = 1;
+		_currentLevel = Pref.Level;
 		_currentLvlObj = Instantiate(levels[_currentLevel - 1]);
 		_startPoint = _currentLvlObj.startPoint;
 	}
@@ -26,10 +26,11 @@ public class LevelManager : Singleton<LevelManager> {
 	public void NextLevel() {
 		int nextLevel = _currentLevel % levels.Length + 1;
 		_currentLevel = nextLevel;
+		Pref.Level = _currentLevel;
 		Destroy(_currentLvlObj.gameObject);
 		_currentLvlObj = Instantiate(levels[_currentLevel - 1]);
 		_startPoint = levels[_currentLevel - 1].startPoint;
-		GameManager.Ins.OnReset();
 		UIManager.Ins.ChangeLevel();
+		EventManager.EmitEvent(EventID.NextLevel);
 	}
 }
