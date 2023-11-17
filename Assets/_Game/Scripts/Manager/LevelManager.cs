@@ -18,6 +18,9 @@ public class LevelManager : Singleton<LevelManager> {
 
 	public override void Awake() {
 		base.Awake();
+		if (Pref.Level > levels.Length) {
+			Pref.Level = 1;
+		}
 		_currentLevel = Pref.Level;
 		_currentLvlObj = Instantiate(levels[_currentLevel - 1]);
 		_startPoint = _currentLvlObj.startPoint;

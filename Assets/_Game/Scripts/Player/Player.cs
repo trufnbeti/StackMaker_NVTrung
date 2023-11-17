@@ -19,8 +19,6 @@ public class Player : MonoBehaviour {
 	// Sử dụng Touch
 	// private Touch touch;
 	//============
-
-	private bool isMoving = false;
 	
 	private string currentAnim;
 	
@@ -54,7 +52,6 @@ public class Player : MonoBehaviour {
 	}
 
 	public void OnReset() {
-		isMoving = false;
 		ClearBrick();
 		sprite.rotation = Quaternion.Euler(180, -30, -180);
 		ResetAnim();
@@ -195,10 +192,8 @@ public class Player : MonoBehaviour {
 	
 	private void Update() {
 		CheckMove();
-		// if (InputManager.Ins.CanMove || GameManager.Ins.IsEndLevel) return;
 		if (!InputManager.Ins.CanMove) return;
 		directionMove = InputManager.Ins.DirectionMove;
-		Debug.Log(directionMove);
 
 		
 	}

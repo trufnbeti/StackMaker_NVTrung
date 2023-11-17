@@ -12,7 +12,6 @@ public class GameManager : Singleton<GameManager> {
 	private Stack<GameObject> objResets = new Stack<GameObject>();
 
 	private void Start() {
-		Pref.Coin = 0;
 		coin = Pref.Coin;
 		if (UIManager.Ins) {
 			UIManager.Ins.UpdateCoin(coin);
